@@ -2,18 +2,18 @@ Datasets
 - fsbr: Frankfurter Straße, Bad Rothenfelde (https://goo.gl/maps/4DZyN25S4oZ9WQGA8)
 - lsho: Lange Straße, Hessisch Oldendorf (https://goo.gl/maps/UHBhKsKojf7e9bUJ9)
 - mke: Marktplatz, Königslutter am Elm* (https://goo.gl/maps/BuAUxr1RNXyX6F7XA)
-	*here it contains only trajectories on street segment part of the layout
+	*here I added only trajectories on street segment part of the layout 
 
 Parameters
 - timestamp = date + time of recording
 - id = road user id
-- user = road user label [car, person]
+- user = road user label [car, person, bicycle]
 - coordx = X coordinate in relation to the layout picture
 - coordy = Y coordinate in relation to the layout picture
 - speed_local = point speed (in relation to previous position)
 - acc = point acceleration (in relation to previous position)
 - zone = current position within the shared space [circulation, safe or activity zone]
-- action = movement pattern, see below:
+- action = movement pattern, i.e. main behaviour pattern when using the space, see below:
 	*crossing: crossing through circulation zone/direct crossing
 	*walking_safe: only using the safe/protected zones 
 	*walking_circulation: extending/prolonging movement in the circulation zone
