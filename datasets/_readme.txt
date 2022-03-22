@@ -24,8 +24,9 @@ Parameters
 	*driving_uturn: using the shared space to turn
 	*driving_wrong: not respecting the design (i.e. driving in restrict area, wrong direction)
 	*riding_circulation: cyclists riding in the circulation zone
-	*riding_safe: cyclists not using the circulation zone, only riding in the safe or activity zones
+	*riding_safe or _activity: cyclists not using the circulation zone, only riding in the safe or activity zone
 	*mix: cyclists using both the circulation and other zones
+	*for lsho: only_certain_zone_comment: also related to cyclists and easy to understand based on the name (when comment = opposite .: cyclists riding opposite to traffic- one-way street where cyclists could ride both ways)
 - design_element = certain element to which the respective road user is closer to in that position (i.e. parking spots, bench etc)
 	*for that a buffer around the design element was created (i.e ca. 1m radius/around it)
 	*"not_close" means that the the road user in that position was not in the "region" of a certain design element
