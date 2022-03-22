@@ -2,7 +2,7 @@ Datasets
 - fsbr: Frankfurter Straße, Bad Rothenfelde (https://goo.gl/maps/4DZyN25S4oZ9WQGA8)
 - lsho: Lange Straße, Hessisch Oldendorf (https://goo.gl/maps/UHBhKsKojf7e9bUJ9)
 - mke: Marktplatz, Königslutter am Elm* (https://goo.gl/maps/BuAUxr1RNXyX6F7XA)
-	*here I added only trajectories on street segment part of the layout 
+	*here already filtered to contain only trajectories in the street segment part
 
 Parameters
 - timestamp = date + time of recording
