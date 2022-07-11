@@ -74,72 +74,73 @@ mean(subset(gerdat, case=='mke')$mean_car_speed)
 
 # HOT HOT HOT
 # create a new dataset, with all shared space sections...
-x='fsbr'
-traf<-data.frame(case=x, flow=30*subset(gerdat, case==x)$n_cars, 
-                 dspeed = subset(gerdat, case==x)$mean_car_speed - mean(subset(gerdat, case==x)$mean_car_speed),
-                 ped = 30*subset(gerdat, case==x)$n_pedestrians,
-                 cross = 30*subset(gerdat, case==x)$ped_crossing,
-                 shared = subset(gerdat, case==x)$shared,
-                 oneway = subset(gerdat, case==x)$oneway,
-                 park = subset(gerdat, case==x)$park,
-                 mark = subset(gerdat, case==x)$mark,
-                 trees = subset(gerdat, case==x)$trees,
-                 bollards = subset(gerdat, case==x)$bollards, 
-                 width = subset(gerdat, case==x)$width)
-x='lsho'
-traf<-rbind(traf, data.frame(case=x, flow=30*subset(gerdat, case==x)$n_cars, 
-                             dspeed = subset(gerdat, case==x)$mean_car_speed - mean(subset(gerdat, case==x)$mean_car_speed),
-                             ped = 30*subset(gerdat, case==x)$n_pedestrians,
-                             cross = 30*subset(gerdat, case==x)$ped_crossing,
-                             shared = subset(gerdat, case==x)$shared,
-                             oneway = subset(gerdat, case==x)$oneway,
-                             park = subset(gerdat, case==x)$park,
-                             mark = subset(gerdat, case==x)$mark,
-                             trees = subset(gerdat, case==x)$trees,
-                             bollards = subset(gerdat, case==x)$bollards, 
-                             width = subset(gerdat, case==x)$width))
-x='mke'
-traf<-rbind(traf, data.frame(case=x, flow=30*subset(gerdat, case==x)$n_cars, 
-                             dspeed = subset(gerdat, case==x)$mean_car_speed - mean(subset(gerdat, case==x)$mean_car_speed),
-                             ped = 30*subset(gerdat, case==x)$n_pedestrians,
-                             cross = 30*subset(gerdat, case==x)$ped_crossing,
-                             shared = subset(gerdat, case==x)$shared,
-                             oneway = subset(gerdat, case==x)$oneway,
-                             park = subset(gerdat, case==x)$park,
-                             mark = subset(gerdat, case==x)$mark,
-                             trees = subset(gerdat, case==x)$trees,
-                             bollards = subset(gerdat, case==x)$bollards, 
-                             width = subset(gerdat, case==x)$width))
-x='shnaf'
-traf<-rbind(traf, data.frame(case=x, flow=60/subset(eldat, shared==1)$headway, # Add Nafplio data
-                             dspeed = subset(eldat, shared==1)$speed - mean(subset(eldat, shared==1)$speed),
-                             ped = 30*subset(eldat, shared==1)$ped,
-                             cross = 30*subset(eldat, shared==1)$cross,
-                             shared = subset(eldat, case==x)$shared,
-                             oneway = subset(eldat, case==x)$oneway,
-                             park = subset(eldat, case==x)$park,
-                             mark = subset(eldat, case==x)$mark,
-                             trees = subset(eldat, case==x)$trees,
-                             bollards = subset(eldat, case==x)$bollards, 
-                             width = subset(eldat, case==x)$width))
+datafr_fun <- function(df, x, dats){
+  if(dats == 'dats1'){datafr<-data.frame(case=x, flow=30*subset(df, case==x)$n_cars, 
+                                              dspeed = subset(df, case==x)$mean_car_speed - mean(subset(df, case==x)$mean_car_speed),
+                                              lspeed = subset(df, case==x)$mean_car_speed - 15,
+                                              ped = 30*subset(df, case==x)$n_pedestrians,
+                                              cross = 30*subset(df, case==x)$ped_crossing,
+                                              shared = subset(df, case==x)$shared,
+                                              oneway = subset(df, case==x)$oneway,
+                                              park = subset(df, case==x)$park,
+                                              mark = subset(df, case==x)$mark,
+                                              trees = subset(df, case==x)$trees,
+                                              bollards = subset(df, case==x)$bollards, 
+                                              width = subset(df, case==x)$width,
+                                              cross_y = subset(df, case==x)$width,
+                                              s_width = subset(df, case==x)$s_width,
+                                              inters = subset(df, case==x)$inters,
+                                              bench = subset(df, case==x)$bench,
+                                              obst = subset(df, case==x)$obst,
+                                              lev_segr = subset(df, case==x)$lev_segr)}
 
-x='covnaf'
-traf<-rbind(traf, data.frame(case=x, flow=60/subset(eldat, shared==0)$headway, # Add Nafplio data
-                             dspeed = subset(eldat, shared==0)$speed - mean(subset(eldat, shared==1)$speed),
-                             ped = 30*subset(eldat, shared==0)$ped,
-                             cross = 30*subset(eldat, shared==0)$cross,
-                             shared = subset(eldat, case==x)$shared,
-                             oneway = subset(eldat, case==x)$oneway,
-                             park = subset(eldat, case==x)$park,
-                             mark = subset(eldat, case==x)$mark,
-                             trees = subset(eldat, case==x)$trees,
-                             bollards = subset(eldat, case==x)$bollards, 
-                             width = subset(eldat, case==x)$width))
+  if(dats == 'dats2'){datafr<-data.frame(case=x, flow=60/subset(df, case==x)$headway,
+                                         dspeed = subset(df, case==x)$speed - mean(subset(df, case==x)$speed),
+                                         lspeed = subset(df, case==x)$speed - 30,
+                                         ped = 30*subset(df, case==x)$ped,
+                                         cross = 30*subset(df, case==x)$cross,
+                                         shared = subset(df, case==x)$shared,
+                                         oneway = subset(df, case==x)$oneway,
+                                         park = subset(df, case==x)$park,
+                                         mark = subset(df, case==x)$mark,
+                                         trees = subset(df, case==x)$trees,
+                                         bollards = subset(df, case==x)$bollards, 
+                                         width = subset(df, case==x)$width,
+                                         cross_y = subset(df, case==x)$cross_y,
+                                         s_width = subset(df, case==x)$s_width,
+                                         inters = subset(df, case==x)$inters,
+                                         bench = subset(df, case==x)$bench,
+                                         obst = subset(df, case==x)$obst,
+                                         lev_segr = subset(df, case==x)$lev_segr)}
+  
+  
+  return(datafr)}
 
-corel = subset(traf, select = -case)
+
+traf<-datafr_fun(gerdat,'fsbr', 'dats1')
+traf<-rbind(traf, datafr_fun(gerdat,'lsho', 'dats1'))
+traf<-rbind(traf, datafr_fun(gerdat,'mke', 'dats1'))
+traf<-rbind(traf, datafr_fun(eldat,'shnaf','dats2'))
+traf<-rbind(traf, datafr_fun(eldat,'covnaf', 'dats2'))
+
+summary(aov(lspeed ~ shared, data = traf )) # expected significance
+summary(aov(lspeed ~ oneway, data = traf )) # significant
+summary(aov(lspeed ~ mark, data = traf )) # significant
+summary(aov(lspeed ~ trees, data = traf )) # significant
+summary(aov(lspeed ~ bollards, data = traf )) # not significant
+summary(aov(lspeed ~ width, data = traf )) # significant
+summary(aov(lspeed ~ cross_y, data = traf )) # significant
+summary(aov(lspeed ~ s_width, data = traf )) # significant
+summary(aov(lspeed ~ bench, data = traf )) # significant
+summary(aov(lspeed ~ obst, data = traf )) # significant
+summary(aov(lspeed ~ lev_segr, data = traf )) # not significant
+
+traf$pedveh<-traf$ped/(traf$flow + traf$ped)
+
+corel = subset(traf, select = -c(case))
 M = cor(corel)
 testRes=cor.mtest(corel, conf.level=0.95)
-corrplot(M, method = 'number', p.mat = testRes$p, sig.level = 0.05, insig = "blank", diag=FALSE)
+corrplot(M, method = 'number', p.mat = testRes$p, sig.level = 0.05, diag=FALSE)
 
 p1<-ggplot(traf, aes(x=flow/30, y=dspeed)) + geom_point(size = 1.5, alpha = .3) + 
   geom_smooth(method=lm, color="red", aes(group=2)) + 
