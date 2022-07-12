@@ -1,12 +1,15 @@
 library(ggplot2)
 library(ggpubr)
 library(corrplot)
+library(gvlma)
+library(olsrr)
+library(RColorBrewer)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 gerdat<-read.csv2('datasets/datasets_germany_DESIGN.csv', header=T, dec=".", sep=",")
 eldat<-read.csv2('datasets/amalias_traffic_dataset_DESIGN.csv', header=T, dec=".", sep=",")
 
-# creation of traffic dataset, with all possible cases, same data format....
+# NEW DATASET TO PLAY WITH
 datafr_fun <- function(df, x, dats){
   if(dats == 'dats1'){datafr<-data.frame(case=x, flow=30*subset(df, case==x)$n_cars + 30*subset(df, case==x)$n_cyclists,
                                          # all vehicles in veh/h, no pcu was used...
@@ -16,6 +19,7 @@ datafr_fun <- function(df, x, dats){
                                          # deviation from the mean speed.
                                          lspeed = subset(df, case==x)$mean_car_speed - 15,
                                          # difference from the speed limit, compliance of drivers
+                                         comply = subset(df, case==x)$mean_car_speed/15,
                                          ped = 30*subset(df, case==x)$n_pedestrians,
                                          # flow of pedestrians per hour
                                          cross = 30*subset(df, case==x)$ped_crossing)} 
@@ -24,6 +28,7 @@ datafr_fun <- function(df, x, dats){
                                          # calculation flows from headways
                                          dspeed = subset(df, case==x)$speed - mean(subset(df, case==x)$speed),
                                          lspeed = subset(df, case==x)$speed - 30, # there is no speed limit, suppose 30
+                                         comply = subset(df, case==x)$speed/30,
                                          ped = 30*subset(df, case==x)$ped,
                                          cross = 30*subset(df, case==x)$cross)}
   
@@ -56,34 +61,72 @@ traf<-datafr_fun(gerdat,'fsbr', 'dats1')
 traf<-rbind(traf, datafr_fun(gerdat,'lsho', 'dats1'))
 traf<-rbind(traf, datafr_fun(gerdat,'mke', 'dats1'))
 traf<-rbind(traf, datafr_fun(eldat,'shnaf','dats2'))
-# traf<-rbind(traf, datafr_fun(eldat,'covnaf', 'dats2')) # no convetional section inside
+# traf<-rbind(traf, datafr_fun(eldat,'covnaf', 'dats2')) # no conventional section imported in the aanalyis
 
-corr<-function(df, x){
+# CORRELATIONS
+corr<-function(df, x){ # plot correlation table funntion
   corel = df
   M = cor(corel)
   testRes=cor.mtest(corel, conf.level=x)
   corrplot(M, method = 'number', p.mat = testRes$p, sig.level = 1-x, diag=FALSE)} 
 
-corr(subset(traf, select=(-case)), 0.90)
+corr(subset(traf, select=(-case)), 0.95)
 # with X no significant correlations
 # no correlation between speed deviation and crossing or flow
 # but compliance have some interesting correlations...correlation with crossiing, not with flows.
 # positive correlation with flow (????), high speed when we have high flow ??
 # maybe free flow branch and car dominance lead to higher speeds..
-# positive and significant correlation with road width and courtecy crossings, positive
+# positive and significant correlation with road width and courtesy crossings, positive
 # in crossing, super strong correlation with ped and shared
 
-# new variables...
-traf$shped<-traf$ped/(traf$flow + traf$ped) # percentage of pedestrians over all moving objects
-traf$distspace<-traf$width/(2*traf$s_width + traf$width) # ratio of vehicle space vs pedestrian space
-traf$pedcross<-traf$cross/traf$ped
-corr(subset(traf, select=(-case)), 0.99)
+# DESCRIPTIVE STATISTICS
+traf$pedcross<-traf$cross/traf$ped # pedestrian crossings per pedestrian (relative number)
 
-shapiro.test(traf$lspeed)
-shapiro.test(traf$cross)
+# A. descriptive statistics..!
+shapiro.test(traf$lspeed) # no normality
+shapiro.test(traf$dspeed) # no normality
+shapiro.test(traf$cross) # no normality
 
-# 1st RQ: design vs cross and speed
-# start with non-moving object check the impact
+timeplot<-function(df,street,text){ # time series plot, relationship between dspeed, lspeed, pedcross
+  p<-ggplot(subset(df, case==street)) +
+    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = dspeed, color = 'Deviation from mean traffic speed'), size=0.6, linetype='dashed') + 
+    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = lspeed, color = 'Deviation from speed limit'), size=0.6) +
+    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = (pedcross-0.25)*20, color = 'Crossings per pedestrian'), size=0.6) +
+    scale_color_manual(name = '', values = c('Deviation from mean traffic speed'='brown1',
+                                             'Deviation from speed limit'='black',
+                                             'Crossings per pedestrian'='blue2')) +
+    scale_x_continuous(name = 'Two minutes intervals', breaks=seq(0,nrow(subset(df, case==street)),5)) + 
+    scale_y_continuous(name = 'Speed deviations in km/h', limits = c(-25,25),
+                       sec.axis = sec_axis( trans=~ ./20 + 0.25, name="Crossings per pedestrian")) + 
+    ggtitle(text) + theme_bw() + theme(legend.position="bottom")
+return(p)}
+
+ggarrange(timeplot(traf,'fsbr','Frankfurter Straße, Bad Rothenfelde, Germany'),
+          timeplot(traf,'lsho','Lange Straße, Hessisch Oldendorf, Germany'),
+          timeplot(traf,'mke','Marktplatz, Königslutter am Elm, Germany'),
+          timeplot(traf,'shnaf','Amalias Street, Nafplio, Greece'), ncol=1, nrow=4,
+          common.legend = TRUE, legend="bottom") 
+# interesting comparisons comparisons in the last graph...based on the cofigurations of each road.
+
+p1<-ggplot(traf, aes(x=as.factor(case), y = pedcross, fill=case)) + geom_boxplot() + 
+   geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) +
+   scale_x_discrete(name = 'Case', labels = c('Frankfurter Straße', 'Lange Straße',
+                                            'Marktplatz', 'Amalias Street')) +
+   scale_y_continuous(name = 'Number of crossings per pedestrian', limits=c(0,1.5)) +
+   scale_fill_brewer(palette = 'Pastel2')+ theme_bw() + theme(legend.position = "none")
+
+p2<-ggplot(traf, aes(x=as.factor(case), y = comply, fill=case)) + geom_boxplot() + 
+   geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) +
+   scale_x_discrete(name = 'Case', labels = c('Frankfurter Straße', 'Lange Straße',
+                                             'Marktplatz', 'Amalias Street')) +
+   scale_y_continuous(name = 'Speed compliance rate') +
+   scale_fill_brewer(palette = 'Pastel2')+ theme_bw() + theme(legend.position = "none")
+
+ggarrange(p1,p2, ncol=1, nrow=2)
+# end up with two important parameters: compliance rate and crossings per pedestrian
+# two different forces, comparison and analysis.
+
+# DESIGN VS COMPLY AND PEDCROSS
 boxpl_fun<-function(df, x, y1, y2, text){
   p1<-ggplot(df, aes(as.factor({{x}}), {{y1}})) + geom_boxplot( fill = "darkseagreen2") +
     geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) + theme_bw() +
@@ -99,45 +142,75 @@ boxpl_fun<-function(df, x, y1, y2, text){
 # Bollards, yer or no
 mean(subset(traf, bollards == 1)$pedcross) - mean(subset(traf, bollards == 0)$pedcross) # 0.10 more crossings per pedestrian
 wilcox.test(subset(traf, bollards == 1)$pedcross, subset(traf, bollards == 0)$pedcross, exact=FALSE, paired=FALSE) # significance
-mean(subset(traf, bollards == 1)$lspeed) - mean(subset(traf, bollards == 0)$lspeed) # 3.8 higher speed than the speed limit
-wilcox.test(subset(traf, bollards == 1)$lspeed, subset(traf, bollards == 0)$lspeed, exact=FALSE, paired=FALSE)
+mean(subset(traf, bollards == 1)$comply) - mean(subset(traf, bollards == 0)$comply)
+wilcox.test(subset(traf, bollards == 1)$comply, subset(traf, bollards == 0)$comply, exact=FALSE, paired=FALSE)
 # statistically significant difference for 95% confidence interval
-boxpl_fun(traf, bollards, pedcross, lspeed, '1, if there are bollards')
+boxpl_fun(traf, bollards, pedcross, comply, '1, if there are bollards')
 
 # Zebra crossing, yes or no
 mean(subset(traf, cross_y == 1)$pedcross) - mean(subset(traf, cross_y == 0)$pedcross) # 0.09 less crossings
 wilcox.test(subset(traf, cross_y == 1)$pedcross, subset(traf, cross_y == 0)$pedcross, exact=FALSE, paired=FALSE) # significance
-mean(subset(traf, cross_y == 1)$lspeed) - mean(subset(traf, cross_y == 0)$lspeed) # 5.6 higher speed than the speed limit
-wilcox.test(subset(traf, cross_y == 1)$lspeed, subset(traf, cross_y == 0)$lspeed, exact=FALSE, paired=FALSE) # significance
-boxpl_fun(traf, cross_y, pedcross, lspeed, '1, if there are zebra pedestrian crossings')
+mean(subset(traf, cross_y == 1)$comply) - mean(subset(traf, cross_y == 0)$comply) 
+wilcox.test(subset(traf, cross_y == 1)$comply, subset(traf, cross_y == 0)$comply, exact=FALSE, paired=FALSE) # significance
+boxpl_fun(traf, cross_y, pedcross, comply, '1, if there are zebra pedestrian crossings')
 
 # Trees, yes or no
 mean(subset(traf, trees == 1)$pedcross) - mean(subset(traf, trees == 0)$pedcross) # -0.133 less crossings
 wilcox.test(subset(traf, trees == 1)$pedcross, subset(traf, trees == 0)$pedcross, exact=FALSE, paired=FALSE) # significance
-mean(subset(traf, trees == 1)$lspeed) - mean(subset(traf, trees == 0)$lspeed) # 1.2 higher speed than the speed limit
-wilcox.test(subset(traf, trees == 1)$lspeed, subset(traf, trees == 0)$lspeed, exact=FALSE, paired=FALSE) # significance
-boxpl_fun(traf, trees, pedcross, lspeed, '1, if there are trees')
+mean(subset(traf, trees == 1)$comply) - mean(subset(traf, trees == 0)$comply)
+wilcox.test(subset(traf, trees == 1)$comply, subset(traf, trees == 0)$comply, exact=FALSE, paired=FALSE) # significance
+boxpl_fun(traf, trees, pedcross, comply, '1, if there are trees')
 
 # Level_segregation, yes or no
 mean(subset(traf, lev_segr == 1)$pedcross) - mean(subset(traf, lev_segr == 0)$pedcross) # 0.133 less crossings
 wilcox.test(subset(traf, lev_segr == 1)$pedcross, subset(traf, lev_segr == 0)$pedcross, exact=FALSE, paired=FALSE) # significance
-mean(subset(traf, lev_segr == 1)$lspeed) - mean(subset(traf, lev_segr == 0)$lspeed) # 1.2 lower speed than the speed limit
-wilcox.test(subset(traf, lev_segr == 1)$lspeed, subset(traf, lev_segr == 0)$lspeed, exact=FALSE, paired=FALSE) # significance
-boxpl_fun(traf, lev_segr, pedcross, lspeed, '1, if there is level segregation')
+mean(subset(traf, lev_segr == 1)$comply) - mean(subset(traf, lev_segr == 0)$comply)
+wilcox.test(subset(traf, lev_segr == 1)$comply, subset(traf, lev_segr == 0)$comply, exact=FALSE, paired=FALSE) # significance
+boxpl_fun(traf, lev_segr, pedcross, comply, '1, if there is level segregation')
 
 # Bench, yes or no
 mean(subset(traf, bench == 1)$pedcross) - mean(subset(traf, bench == 0)$pedcross) # -0.059 more crossings
 wilcox.test(subset(traf, bench == 1)$cross, subset(traf, bench == 0)$cross, exact=FALSE, paired=FALSE) # no significance here
-mean(subset(traf, bench == 1)$lspeed) - mean(subset(traf, bench == 0)$lspeed) # 1.3 lower speed than the speed limit
-wilcox.test(subset(traf, bench == 1)$lspeed, subset(traf, bench == 0)$lspeed, exact=FALSE, paired=FALSE) # significance
-boxpl_fun(traf, bench, pedcross, lspeed, '1, if there are benches')
+mean(subset(traf, bench == 1)$comply) - mean(subset(traf, bench == 0)$comply)
+wilcox.test(subset(traf, bench == 1)$comply, subset(traf, bench == 0)$comply, exact=FALSE, paired=FALSE) # significance
+boxpl_fun(traf, bench, pedcross, comply, '1, if there are benches')
 
 # Obstacles, yes or no
 mean(subset(traf, obst == 1)$pedcross) - mean(subset(traf, obst == 0)$pedcross) # -0.133 more crossings
 wilcox.test(subset(traf, obst == 1)$cross, subset(traf, obst == 0)$cross, exact=FALSE, paired=FALSE) # significance
-mean(subset(traf, obst == 1)$lspeed) - mean(subset(traf, obst == 0)$lspeed) # 1.3 lower speed than the speed limit
-wilcox.test(subset(traf, obst == 1)$lspeed, subset(traf, obst == 0)$lspeed, exact=FALSE, paired=FALSE) # significance
-boxpl_fun(traf, obst, pedcross, lspeed, '1, if there are obstacles')
+mean(subset(traf, obst == 1)$comply) - mean(subset(traf, obst == 0)$comply)
+wilcox.test(subset(traf, obst == 1)$comply, subset(traf, obst == 0)$comply, exact=FALSE, paired=FALSE) # significance
+boxpl_fun(traf, obst, pedcross, comply, '1, if there are obstacles')
+
+
+# MODELING, new models about compliance and crossings
+# new variables....
+traf$shvehspace<-traf$width/(2*traf$s_width + traf$width) # percentage of veh space over all 
+traf$shpedspace<-(2*traf$s_width)/(2*traf$s_width + traf$width) # percentage of ped space over all
+
+traf$shped<-traf$ped/(traf$flow + traf$ped) # percentage of pedestrians flow over all moving objects
+traf$shveh<-traf$flow/(traf$flow + traf$ped) # percentage of vehicles flow over all moving objects
+
+corr(subset(traf, select=c(cross, comply, shped, shveh, shvehspace, shpedspace)), 0.95)
+
+traf$cross2<-sqrt(traf$cross) # transformation of crossing rate, to solve linearity problem
+traf$pedcross2<-1/exp(traf$pedcross)
+model1<-lm(pedcross2 ~ shped + shpedspace + cross_y,
+           data=traf[-c(228, 226, 31, 196, 59, 255, 223, 70),])
+summary(model1)
+gvlma(model1) 
+par(mfrow=c(2,2)) # all linear regression assumptions were met
+plot(model1, pch=20)
+ols_vif_tol(model1) # no multicolinearities
+
+model2<-lm(comply ~ shped + shpedspace + lev_segr, data=traf[-c(250, 170, 137, 188, 167, 185, 160,
+                                                                152, 150, 141, 259, 200, 191, 176, 157, 66, 148,
+                                                                174, 154, 153),])
+summary(model2)
+gvlma(model2) 
+par(mfrow=c(2,2)) # all linear regression assumptions were met 
+plot(model2, pch=20)
+ols_vif_tol(model2) # no multicolinearities
 
 
 
@@ -149,6 +222,7 @@ boxpl_fun(traf, obst, pedcross, lspeed, '1, if there are obstacles')
 
 
 
+# OLD CODE I DID NOT EXTEND THIS ANALYSIS TO FUNDAMENTAL DIAGRAMS
 
 
 
@@ -212,14 +286,11 @@ mean(subset(gerdat, case=='mke')$mean_car_speed)
 # HOT HOT HOT
 # create a new dataset, with all shared space sections...
 
-
 traf<-datafr_fun(gerdat,'fsbr', 'dats1')
 traf<-rbind(traf, datafr_fun(gerdat,'lsho', 'dats1'))
 traf<-rbind(traf, datafr_fun(gerdat,'mke', 'dats1'))
 traf<-rbind(traf, datafr_fun(eldat,'shnaf','dats2'))
 traf<-rbind(traf, datafr_fun(eldat,'covnaf', 'dats2'))
-
-
 
 p1<-ggplot(traf, aes(x=flow/30, y=dspeed)) + geom_point(size = 1.5, alpha = .3) + 
   geom_smooth(method=lm, color="red", aes(group=2)) + 
