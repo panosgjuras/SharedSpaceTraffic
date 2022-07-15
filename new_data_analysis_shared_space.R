@@ -9,17 +9,19 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 gerdat<-read.csv2('datasets/datasets_germany_DESIGN.csv', header=T, dec=".", sep=",")
 eldat<-read.csv2('datasets/amalias_traffic_dataset_DESIGN.csv', header=T, dec=".", sep=",")
 
+# 
+
 # NEW DATASET TO PLAY WITH
-datafr_fun <- function(df, x, dats){
+datafr_fun <- function(df, x, dats, limit){
   if(dats == 'dats1'){datafr<-data.frame(case=x, flow=30*subset(df, case==x)$n_cars + 30*subset(df, case==x)$n_cyclists,
                                          # all vehicles in veh/h, no pcu was used...
                                          # cyclists cannot be considered separately
                                          # since no cyclists recorded in Nafplio, Greece
                                          dspeed = subset(df, case==x)$mean_car_speed - mean(subset(df, case==x)$mean_car_speed),
                                          # deviation from the mean speed.
-                                         lspeed = subset(df, case==x)$mean_car_speed - 15,
+                                         lspeed = subset(df, case==x)$mean_car_speed - limit,
                                          # difference from the speed limit, compliance of drivers
-                                         comply = subset(df, case==x)$mean_car_speed/15,
+                                         comply = subset(df, case==x)$mean_car_speed/limit,
                                          ped = 30*subset(df, case==x)$n_pedestrians,
                                          # flow of pedestrians per hour
                                          cross = 30*subset(df, case==x)$ped_crossing)} 
@@ -27,8 +29,8 @@ datafr_fun <- function(df, x, dats){
   if(dats == 'dats2'){datafr<-data.frame(case=x, flow=60/subset(df, case==x)$headway,
                                          # calculation flows from headways
                                          dspeed = subset(df, case==x)$speed - mean(subset(df, case==x)$speed),
-                                         lspeed = subset(df, case==x)$speed - 30, # there is no speed limit, suppose 30
-                                         comply = subset(df, case==x)$speed/30,
+                                         lspeed = subset(df, case==x)$speed - limit, # there is no speed limit, suppose 30
+                                         comply = subset(df, case==x)$speed/limit,
                                          ped = 30*subset(df, case==x)$ped,
                                          cross = 30*subset(df, case==x)$cross)}
   
@@ -57,10 +59,10 @@ datafr_fun <- function(df, x, dats){
                                     lev_segr = subset(df, case==x)$lev_segr)) # 1, if level segregatioN
   return(datafr)}
 
-traf<-datafr_fun(gerdat,'fsbr', 'dats1')
-traf<-rbind(traf, datafr_fun(gerdat,'lsho', 'dats1'))
-traf<-rbind(traf, datafr_fun(gerdat,'mke', 'dats1'))
-traf<-rbind(traf, datafr_fun(eldat,'shnaf','dats2'))
+traf<-datafr_fun(gerdat,'fsbr', 'dats1', 20) # fsbr 20 km/h
+traf<-rbind(traf, datafr_fun(gerdat,'lsho', 'dats1', 10)) # 10 km/h
+traf<-rbind(traf, datafr_fun(gerdat,'mke', 'dats1', 20)) # 20 km/h
+traf<-rbind(traf, datafr_fun(eldat,'shnaf','dats2', 30)) # # 30 km/h
 # traf<-rbind(traf, datafr_fun(eldat,'covnaf', 'dats2')) # no conventional section imported in the aanalyis
 
 # CORRELATIONS
@@ -135,7 +137,7 @@ boxpl_fun<-function(df, x, y1, y2, text){
   p2<-ggplot(df, aes(as.factor({{x}}), {{y2}})) + geom_boxplot( fill = "lightblue1") +
     geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) + theme_bw() +
     scale_x_discrete(name = text, limits=c("0","1")) +
-    scale_y_continuous(name ="Deviation of traffic speed from speed limit in km/h")
+    scale_y_continuous(name ="Compliance rate")
   ggarrange(p1, p2, ncol=2, nrow=1)
 } # box plot function to see visually the impact of each road design feature
 
