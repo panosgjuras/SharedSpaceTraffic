@@ -4,6 +4,8 @@ library(corrplot)
 library(gvlma)
 library(olsrr)
 library(RColorBrewer)
+library(psych)
+library(dplyr)
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 gerdat<-read.csv2('datasets/datasets_germany_DESIGN.csv', header=T, dec=".", sep=",")
@@ -17,6 +19,7 @@ datafr_fun <- function(df, x, dats, limit){
                                          # all vehicles in veh/h, no pcu was used...
                                          # cyclists cannot be considered separately
                                          # since no cyclists recorded in Nafplio, Greece
+                                         speed = subset(df, case==x)$mean_car_speed,
                                          dspeed = subset(df, case==x)$mean_car_speed - mean(subset(df, case==x)$mean_car_speed),
                                          # deviation from the mean speed.
                                          lspeed = subset(df, case==x)$mean_car_speed - limit,
@@ -28,6 +31,7 @@ datafr_fun <- function(df, x, dats, limit){
   
   if(dats == 'dats2'){datafr<-data.frame(case=x, flow=60/subset(df, case==x)$headway,
                                          # calculation flows from headways
+                                         speed = subset(df, case==x)$speed,
                                          dspeed = subset(df, case==x)$speed - mean(subset(df, case==x)$speed),
                                          lspeed = subset(df, case==x)$speed - limit, # there is no speed limit, suppose 30
                                          comply = subset(df, case==x)$speed/limit,
@@ -37,6 +41,7 @@ datafr_fun <- function(df, x, dats, limit){
   datafr<-cbind(datafr, data.frame(shared = subset(df, case==x)$shared,
                                     # 1, if shared space, only one section
                                     oneway = subset(df, case==x)$oneway,
+                                    lanes = subset(df, case==x)$lanes,
                                     # 1, if oneway road
                                     # park = subset(df, case==x)$park, # no use, all section with parking
                                     mark = subset(df, case==x)$mark,
@@ -56,13 +61,17 @@ datafr_fun <- function(df, x, dats, limit){
                                     # 1, if benches
                                     obst = subset(df, case==x)$obst,
                                     # 1, if obstacles
-                                    lev_segr = subset(df, case==x)$lev_segr)) # 1, if level segregatioN
+                                    lev_segr = subset(df, case==x)$lev_segr),
+                                    vis_segr = subset(df, case==x)$vis_segr) # 1, if level segregatioN
   return(datafr)}
 
 traf<-datafr_fun(gerdat,'fsbr', 'dats1', 20) # fsbr 20 km/h
 traf<-rbind(traf, datafr_fun(gerdat,'lsho', 'dats1', 10)) # 10 km/h
 traf<-rbind(traf, datafr_fun(gerdat,'mke', 'dats1', 20)) # 20 km/h
 traf<-rbind(traf, datafr_fun(eldat,'shnaf','dats2', 30)) # # 30 km/h
+traf$comply<-replace(traf$comply, traf$comply==0, 1)
+
+
 # traf<-rbind(traf, datafr_fun(eldat,'covnaf', 'dats2')) # no conventional section imported in the aanalyis
 
 # CORRELATIONS
@@ -82,32 +91,174 @@ corr(subset(traf, select=(-case)), 0.95)
 # in crossing, super strong correlation with ped and shared
 
 # DESCRIPTIVE STATISTICS
+
+
+
 traf$pedcross<-traf$cross/traf$ped # pedestrian crossings per pedestrian (relative number)
+traf$shpedspace<-(2*traf$s_width)/(2*traf$s_width + traf$width) # percentage of ped space over all
+traf$shped<-traf$ped/(traf$flow + traf$ped)
 
 # A. descriptive statistics..!
+describe(subset(traf, case=='fsbr')$speed)
+describe(subset(traf, case=='lsho')$speed)
+describe(subset(traf, case=='mke')$speed)
+describe(subset(traf, case=='shnaf')$speed)
+
+describe(subset(traf, case=='fsbr')$shpedspace)
+describe(subset(traf, case=='lsho')$shpedspace)
+describe(subset(traf, case=='mke')$shpedspace)
+describe(subset(traf, case=='shnaf')$shpedspace)
+
+describe(subset(traf, case=='fsbr')$ped/30)
+describe(subset(traf, case=='lsho')$ped/30)
+describe(subset(traf, case=='mke')$ped/30)
+describe(subset(traf, case=='shnaf')$ped/30)
+
+describe(subset(traf, case=='fsbr')$flow/30)
+describe(subset(traf, case=='lsho')$flow/30)
+describe(subset(traf, case=='mke')$flow/30)
+describe(subset(traf, case=='shnaf')$flow/30)
+
+describe(subset(traf, case=='fsbr')$cross/30)
+describe(subset(traf, case=='lsho')$cross/30)
+describe(subset(traf, case=='mke')$cross/30)
+describe(subset(traf, case=='shnaf')$cross/30)
+
+describe(subset(traf, case=='fsbr')$shped)
+describe(subset(traf, case=='lsho')$shped)
+describe(subset(traf, case=='mke')$shped)
+describe(subset(traf, case=='shnaf')$shped)
+
+describe(subset(traf, case=='fsbr')$pedcross)
+describe(subset(traf, case=='lsho')$pedcross)
+describe(subset(traf, case=='mke')$pedcross)
+describe(subset(traf, case=='shnaf')$pedcross)
+
+describe(subset(traf, case=='fsbr')$dspeed)
+describe(subset(traf, case=='lsho')$dspeed)
+describe(subset(traf, case=='mke')$dspeed)
+describe(subset(traf, case=='shnaf')$dspeed)
+
+describe(subset(traf, case=='fsbr')$comply)
+describe(subset(traf, case=='lsho')$comply)
+describe(subset(traf, case=='mke')$comply)
+describe(subset(traf, case=='shnaf')$comply)
+
+traf$flow3<-traf$flow/(traf$lanes*30)
+traf$ped2<-traf$ped/30
+traf$vehped<-traf$flow/traf$ped
+traf$l_width<-traf$width/traf$lanes
+traf$spratio<-traf$l_width/traf$s_width
+corr(select(traf, c('shpedspace', 'spratio', 'ped', 'flow', 'cross','pedcross', 'comply', 'dspeed')), 0.95)
+
+
+mean(subset(traf, lanes==2)$pedcross)-mean(subset(traf, lanes==1)$pedcross)
+wilcox.test(subset(traf, lanes==2)$pedcross, 
+            subset(traf, lanes==1)$pedcross, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, lanes==2)$comply)-mean(subset(traf, lanes==1)$comply)
+wilcox.test(subset(traf, lanes==2)$comply, 
+            subset(traf, lanes==1)$comply, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, vis_segr==1)$pedcross)-mean(subset(traf, vis_segr==0)$pedcross)
+wilcox.test(subset(traf, vis_segr==1)$pedcross, 
+            subset(traf, vis_segr==0)$pedcross, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, lev_segr==1)$pedcross)-mean(subset(traf, lev_segr==0)$pedcross)
+wilcox.test(subset(traf, lev_segr==1)$pedcross, 
+            subset(traf, lev_segr==0)$pedcross, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, cross_y==1)$pedcross)-mean(subset(traf, cross_y==0)$pedcross)
+wilcox.test(subset(traf, cross_y==1)$pedcross, 
+            subset(traf, cross_y==0)$pedcross, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, bollards==1)$pedcross)-mean(subset(traf, bollards==0)$pedcross)
+wilcox.test(subset(traf, bollards==1)$pedcross, 
+            subset(traf, bollards==0)$pedcross, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, bench==1)$pedcross)-mean(subset(traf, bench==0)$pedcross)
+wilcox.test(subset(traf, bench==1)$pedcross, 
+            subset(traf, bench==0)$pedcross, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, vis_segr==1)$comply)-mean(subset(traf, vis_segr==0)$comply)
+wilcox.test(subset(traf, vis_segr==1)$comply, 
+            subset(traf, vis_segr==0)$comply, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, lev_segr==1)$comply)-mean(subset(traf, lev_segr==0)$comply)
+wilcox.test(subset(traf, lev_segr==1)$comply, 
+            subset(traf, lev_segr==0)$comply, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, cross_y==1)$comply)-mean(subset(traf, cross_y==0)$comply)
+wilcox.test(subset(traf, cross_y==1)$comply, 
+            subset(traf, cross_y==0)$comply, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, bollards==1)$comply)-mean(subset(traf, bollards==0)$comply)
+wilcox.test(subset(traf, bollards==1)$comply, 
+            subset(traf, bollards==0)$comply, 
+            exact=FALSE, paired=FALSE)
+
+mean(subset(traf, bench==1)$comply)-mean(subset(traf, bench==0)$comply)
+wilcox.test(subset(traf, bench==1)$comply, 
+            subset(traf, bench==0)$comply, 
+            exact=FALSE, paired=FALSE)
+
+
+shapiro.test(traf$ped/30) # no normality
+shapiro.test(traf$flow/30) # no normality
 shapiro.test(traf$lspeed) # no normality
 shapiro.test(traf$dspeed) # no normality
-shapiro.test(traf$cross) # no normality
+shapiro.test(traf$pedcross) # no normality
+
 
 timeplot<-function(df,street,text){ # time series plot, relationship between dspeed, lspeed, pedcross
   p<-ggplot(subset(df, case==street)) +
-    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = dspeed, color = 'Deviation from mean traffic speed'), size=0.6, linetype='dashed') + 
-    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = lspeed, color = 'Deviation from speed limit'), size=0.6) +
-    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = (pedcross-0.25)*20, color = 'Crossings per pedestrian'), size=0.6) +
-    scale_color_manual(name = '', values = c('Deviation from mean traffic speed'='brown1',
-                                             'Deviation from speed limit'='black',
+    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = dspeed, color = 'Deviation from mean traffic speed'), size=0.75, linetype='solid') + 
+    # geom_line(aes(x = 1:nrow(subset(df, case==street)), y = comply*20-0.25, color = 'Deviation from speed limit'), size=0.6) +
+    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = (pedcross*20) - 6, color = 'Crossings per pedestrian'), size=0.75) +
+    scale_color_manual(name = '', values = c('Deviation from mean traffic speed'='red',
+                                             #'Deviation from speed limit'='black',
                                              'Crossings per pedestrian'='blue2')) +
     scale_x_continuous(name = 'Two minutes intervals', breaks=seq(0,nrow(subset(df, case==street)),5)) + 
     scale_y_continuous(name = 'Speed deviations in km/h', limits = c(-25,25),
-                       sec.axis = sec_axis( trans=~ ./20 + 0.25, name="Crossings per pedestrian")) + 
+                       sec.axis = sec_axis( trans=~ (./20) + 0.3, name="Pedestrian crossing rate")) + 
     ggtitle(text) + theme_bw() + theme(legend.position="bottom")
 return(p)}
+
+timeplot2<-function(df,street,text){ # time series plot, relationship between dspeed, lspeed, pedcross
+  p<-ggplot(subset(df, case==street)) +
+    # geom_line(aes(x = 1:nrow(subset(df, case==street)), y = dspeed, color = 'Deviation from mean traffic speed'), size=0.75, linetype='solid') + 
+    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = comply, color = 'Compliance rate'), size=0.75) +
+    geom_line(aes(x = 1:nrow(subset(df, case==street)), y = pedcross + 0.5, color = 'Crossings per pedestrian'), size=0.75) +
+    scale_color_manual(name = '', values = c('Compliance rate'='green',
+                                             'Crossings per pedestrian'='blue2')) +
+    scale_x_continuous(name = 'Two minutes intervals', breaks=seq(0,nrow(subset(df, case==street)),5)) + 
+    scale_y_continuous(name = 'Compliance rate', limits = c(0,2),
+                       sec.axis = sec_axis( trans=~ . - 0.5, name="Pedestrian crossing rate")) + 
+    ggtitle(text) + theme_bw() + theme(legend.position="bottom")
+  return(p)}
+
 
 ggarrange(timeplot(traf,'fsbr','Frankfurter Straße, Bad Rothenfelde, Germany'),
           timeplot(traf,'lsho','Lange Straße, Hessisch Oldendorf, Germany'),
           timeplot(traf,'mke','Marktplatz, Königslutter am Elm, Germany'),
           timeplot(traf,'shnaf','Amalias Street, Nafplio, Greece'), ncol=1, nrow=4,
-          common.legend = TRUE, legend="bottom") 
+          common.legend = TRUE, legend="bottom")
+
+ggarrange(timeplot2(traf,'fsbr','Frankfurter Straße, Bad Rothenfelde, Germany'),
+          timeplot2(traf,'lsho','Lange Straße, Hessisch Oldendorf, Germany'),
+          timeplot2(traf,'mke','Marktplatz, Königslutter am Elm, Germany'),
+          timeplot2(traf,'shnaf','Amalias Street, Nafplio, Greece'), ncol=1, nrow=4,
+          common.legend = TRUE, legend="bottom")
 # interesting comparisons comparisons in the last graph...based on the cofigurations of each road.
 
 p1<-ggplot(traf, aes(x=as.factor(case), y = pedcross, fill=case)) + geom_boxplot() + 
@@ -124,7 +275,37 @@ p2<-ggplot(traf, aes(x=as.factor(case), y = comply, fill=case)) + geom_boxplot()
    scale_y_continuous(name = 'Speed compliance rate') +
    scale_fill_brewer(palette = 'Pastel2')+ theme_bw() + theme(legend.position = "none")
 
-ggarrange(p1,p2, ncol=1, nrow=2)
+ggarrange(p1,p2, ncol=1, nrow=2, common.legend = TRUE, legend="bottom")
+
+ggplot(traf, aes(y=dspeed, x=as.factor(cross/30))) +
+  geom_boxplot(fill = "cadetblue1") + theme_bw() +
+  geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) +
+  scale_y_continuous(name ="Speed deviation in km/h") +
+  scale_x_discrete(name ="Pedestrian crossing in peds/2 minutes")
+
+p1<-ggplot(traf, aes(y=pedcross, x=flow/30, color=case))+ geom_point()+ theme_bw() + 
+  scale_color_brewer(palette = 'Dark2') +   
+  geom_smooth(method='lm', color='black', aes(group=case, linetype=case), size=1, alpha=0.2) +
+  scale_linetype_manual(values=c('solid','dashed','dotted','dotdash')) +
+  scale_y_continuous(name = 'Pedestrian crossing rate in cross/ped') + 
+  scale_x_continuous(name = 'Flow of vehicles in veh/2 minutes')
+
+p2<-ggplot(traf, aes(y=comply, x=ped/30, color=case))+ geom_point()+ theme_bw() + 
+  scale_color_brewer(palette = 'Dark2') + 
+  geom_smooth(method='lm', color='black', aes(group=case, linetype=case), size=1, alpha=0.2) +
+  scale_linetype_manual(values=c('solid','dashed','dotted','dotdash')) +
+  scale_y_continuous(name = 'Speed Compliance rate') + 
+  scale_x_continuous(name = 'Flow of pedestrians in peds/2 minutes')
+
+p3<-ggplot(traf, aes(y=dspeed, x=cross, color=case))+ geom_point()+ theme_bw() + 
+  scale_color_brewer(palette = 'Dark2') + 
+  geom_smooth(method='lm', color='black', aes(group=case, linetype=case), size=1, alpha=0.2) +
+  scale_linetype_manual(values=c('solid','dashed','dotted','dotdash')) +
+  scale_y_continuous(name = 'Deviation from mean speed in km/h') + 
+  scale_x_continuous(name = 'Pedestrin crossing rate in cross/ped')
+
+ggarrange(p1, p2, ncol=2, nrow=1, common.legend = TRUE, legend="bottom")
+
 # end up with two important parameters: compliance rate and crossings per pedestrian
 # two different forces, comparison and analysis.
 
@@ -193,7 +374,7 @@ traf$shpedspace<-(2*traf$s_width)/(2*traf$s_width + traf$width) # percentage of 
 traf$shped<-traf$ped/(traf$flow + traf$ped) # percentage of pedestrians flow over all moving objects
 traf$shveh<-traf$flow/(traf$flow + traf$ped) # percentage of vehicles flow over all moving objects
 
-corr(subset(traf, select=c(cross, comply, shped, shveh, shvehspace, shpedspace)), 0.95)
+# corr(subset(traf, select=c(cross, comply, shped, shveh, shvehspace, shpedspace)), 0.95)
 
 traf$cross2<-sqrt(traf$cross) # transformation of crossing rate, to solve linearity problem
 traf$pedcross2<-1/exp(traf$pedcross)
@@ -215,16 +396,80 @@ plot(model2, pch=20)
 ols_vif_tol(model2) # no multicolinearities
 
 
+traf$flow2<-traf$flow/30
+traf$pedcross2<-1/exp(traf$pedcross)
+model3<-lm(pedcross2 ~ flow2 + spratio, data = traf[-c(228, 226, 196, 70, 31, 59, 46,
+                                                      123,29, 246, 223),])
+summary(model3)
+gvlma(model3)
+ols_vif_tol(model3)
+par(mfrow=c(2,2))
+plot(model3, pch=20)
+
+traf$ped2<-traf$ped/30
+model4<-lm(comply ~ shpedspace + ped2, data = traf[-c(250, 170, 157),])
+summary(model4)
+gvlma(model4)
+ols_vif_tol(model4)
+par(mfrow=c(2,2))
+plot(model4, pch=20)
+
+model5<-lm(dspeed ~ cross, data=traf)
+summary(model5)
+gvlma(model5)
 
 
 
+traf$cross2<-(traf$cross)^3
+traf$dspeed2<-traf$dspeed^2
+model5<-lm(dspeed ~ cross, data=traf[-c(250,200,259,170,203,286, 176, 137, 191, 148, 235, 185,
+                                         167, 157, 248, 221, 226, 244, 262, 66, 174, 160, 293, 254,
+                                         207, 153, 141),])
+summary(model5)
+gvlma(model5)
+par(mfrow=c(2,2))
+plot(model5, pch=20)
 
 
+sp_csr<-function(csr,qveh) (1/0.2066)*((1/exp(csr)) - 0.6692 - 0.0037*qveh)
 
+ggplot(traf,aes(flow2)) + theme_bw() +
+  stat_function(fun = function(qveh) sp_csr(0.05,qveh), size=1.05) +
+  stat_function(fun = function(qveh) sp_csr(0.10,qveh), size=1.05) +
+  stat_function(fun = function(qveh) sp_csr(0.15,qveh), size=1.05) +
+  stat_function(fun = function(qveh) sp_csr(0.20,qveh), size=1.05) +
+  stat_function(fun = function(qveh) sp_csr(0.25,qveh), size=1.05) +
+  scale_y_continuous("Share of vehicle space", limits = c(0, 1)) +
+  scale_x_continuous("Flow of vehicles in veh/2 mins", limits = c(0, 30))
 
+sp_cmr<-function(cmr, qped) (1/0.3469)*(cmr - 0.6576  + 0.0060*qped)
 
+ggplot(traf,aes(ped2)) + theme_bw() +
+  stat_function(fun = function(qveh) sp_cmr(0.55,qveh), size=1.05) +
+  stat_function(fun = function(qveh) sp_cmr(0.65,qveh), size=1.05) +
+  stat_function(fun = function(qveh) sp_cmr(0.75,qveh), size=1.05) +
+  stat_function(fun = function(qveh) sp_cmr(0.85,qveh), size=1.05) +
+  stat_function(fun = function(qveh) sp_cmr(0.95,qveh), size=1.05) +
+  scale_y_continuous("Share of pedestrian space", limits = c(0, 1)) +
+  scale_x_continuous("Flow of pedestrians in peds/2 mins", limits = c(0, 30))
 
 # OLD CODE I DID NOT EXTEND THIS ANALYSIS TO FUNDAMENTAL DIAGRAMS
+
+cr_fun<-function(qveh,spveh) log(1) -log(0.6692 + 0.0037*qveh + 0.2066*spveh)
+
+ggplot(traf,aes(shvehspace)) + theme_bw() +
+  stat_function(fun = function(spveh) cr_fun(5, spveh), size=1.05)
+  stat_function(fun = function(spveh) cr_fun(10, spveh), size=1.05)
+  stat_function(fun = function(spveh) cr_fun(15, spveh), size=1.05)
+  stat_function(fun = function(spveh) cr_fun(25, spveh), size=1.05)
+  stat_function(fun = function(spveh) cr_fun(30, spveh), size=1.05)
+
+  #stat_function(fun = function(qveh) sp_cmr(0.65,qveh), size=1.05) +
+  #stat_function(fun = function(qveh) sp_cmr(0.75,qveh), size=1.05) +
+  #stat_function(fun = function(qveh) sp_cmr(0.85,qveh), size=1.05) +
+  #stat_function(fun = function(qveh) sp_cmr(0.95,qveh), size=1.05) +
+  #scale_y_continuous("Share of pedestrian space", limits = c(0, 1)) +
+  #scale_x_continuous("Flow of pedestrians in peds/2 mins", limits = c(0, 30))
 
 
 
