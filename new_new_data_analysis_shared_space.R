@@ -123,8 +123,8 @@ traf$maxact<-ifelse(traf$case == 'fsbr', 7, ifelse(traf$case == 'lsho', 3,
                                                           ifelse(traf$case == 'shnaf', 6.5, 0))))
 
 traf$totspace <- (traf$minsafe + traf$maxact + traf$circ)
-traf$shvehspace <- traf$circ/traf$totspace
-traf$shpedspace <- 1 - traf$shvehspace
+#traf$shvehspace <- traf$circ/traf$totspace
+#traf$shpedspace <- 1 - traf$shvehspace
 
 
 
@@ -135,10 +135,10 @@ describe(subset(traf, case=='lsho')$speed)
 describe(subset(traf, case=='mke')$speed)
 describe(subset(traf, case=='shnaf')$speed)
 
-describe(subset(traf, case=='fsbr')$shpedspace)
-describe(subset(traf, case=='lsho')$shpedspace)
-describe(subset(traf, case=='mke')$shpedspace)
-describe(subset(traf, case=='shnaf')$shpedspace)
+#describe(subset(traf, case=='fsbr')$shpedspace)
+#describe(subset(traf, case=='lsho')$shpedspace)
+#describe(subset(traf, case=='mke')$shpedspace)
+#describe(subset(traf, case=='shnaf')$shpedspace)
 
 describe(subset(traf, case=='fsbr')$ped/30)
 describe(subset(traf, case=='lsho')$ped/30)
@@ -155,10 +155,10 @@ describe(subset(traf, case=='lsho')$cross/30)
 describe(subset(traf, case=='mke')$cross/30)
 describe(subset(traf, case=='shnaf')$cross/30)
 
-describe(subset(traf, case=='fsbr')$shped)
-describe(subset(traf, case=='lsho')$shped)
-describe(subset(traf, case=='mke')$shped)
-describe(subset(traf, case=='shnaf')$shped)
+#describe(subset(traf, case=='fsbr')$shped)
+#describe(subset(traf, case=='lsho')$shped)
+#describe(subset(traf, case=='mke')$shped)
+#describe(subset(traf, case=='shnaf')$shped)
 
 describe(subset(traf, case=='fsbr')$pedcross)
 describe(subset(traf, case=='lsho')$pedcross)
@@ -176,11 +176,11 @@ describe(subset(traf, case=='mke')$comply)
 describe(subset(traf, case=='shnaf')$comply)
 
 
-# traf$circped <- traf$circ/(1-traf$totspace)
-# traf$circsaf <- traf$minsaf/traf$circ
-# traf$shcirc<- traf$circ/traf$totspace
-# traf$shminsafe<-traf$minsafe/traf$totspace
-# traf$shmaxact<- traf$maxact/traf$totspace
+traf$circped <- traf$circ/(1-traf$totspace)
+traf$circsaf <- traf$minsaf/traf$circ
+traf$shcirc<- traf$circ/traf$totspace
+traf$shminsafe<-traf$minsafe/traf$totspace
+traf$shmaxact<- traf$maxact/traf$totspace
 
 corr(select(traf, c('shcirc', 'shmaxact', 'shminsafe',
                     'dflow', 'dped', 'dspeed', 'pedcross', 'comply')), 0.95, 'kendall')
