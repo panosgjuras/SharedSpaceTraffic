@@ -1,4 +1,4 @@
-# Examination of traffic conditions in different shared space road environments
+# "Shared space Traffic" - Coexistence problem
 
 The concept of “shared space” refers to that part of urban road space which all road users (including pedestrians, cyclists, vehicles and disabled people) are encouraged to legally occupy, with little physical or visual separation (Hamilton-Baillie, 2008a; Karndacharuk, Wilson and R. C. M. Dunn, 2014; Tzouras et al., 2021). In general, shared space intends to create safer road environments, by adding more danger (Kaparias et al., 2012; Tzouras et al., 2020). The concept is based on the risk homeostasis theory, where humans shift the balance of risk according to the surrounding environment (Hammond and Musselwhite, 2013). Since shared space is a concept that increase the number and the complexity of interactions among road users, there are intriguing research questions, which have not been answered so far (Alsaleh and Sayed, 2021). 
 
