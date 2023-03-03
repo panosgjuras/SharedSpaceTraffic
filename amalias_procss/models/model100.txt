@@ -1,0 +1,20 @@
+
+Call:
+lm(formula = cross2 ~ ped + headway + 0, data = subset(ped_data[-c(155, 
+    154, 191, 166, 33, 31, 1, 27, 69, 98, 51), ], case == "covnaf"))
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.2938 -0.2809  0.1061  0.4141  1.2080 
+
+Coefficients:
+        Estimate Std. Error t value Pr(>|t|)    
+ped     0.095384   0.008359  11.410   <2e-16 ***
+headway 0.436238   0.202557   2.154   0.0337 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.607 on 98 degrees of freedom
+Multiple R-squared:  0.823,	Adjusted R-squared:  0.8194 
+F-statistic: 227.9 on 2 and 98 DF,  p-value: < 2.2e-16
+

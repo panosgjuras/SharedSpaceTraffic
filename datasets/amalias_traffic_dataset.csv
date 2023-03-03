@@ -1,4 +1,4 @@
-period,date,time,ped,cross,headway,speed,spcu,flow,case
+tid,date,time,ped,cross,headway,speed,spcu,flow,case
 1,"Saturday, June 19, 2021",11:33:00,5,7,0.16,17.5,2,375,shnaf
 2,"Saturday, June 19, 2021",11:37:00,7,6,0.88,17,1,68.18181818,shnaf
 3,"Saturday, June 19, 2021",11:40:00,15,3,0.2,30.8,7,300,shnaf
