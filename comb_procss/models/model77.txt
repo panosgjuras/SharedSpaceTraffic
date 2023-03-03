@@ -1,0 +1,23 @@
+
+Call:
+lm(formula = pedcross2 ~ dflow + dped + shcirc + shminsafe, data = traf[-c(228, 
+    226, 196, 70, 31, 59, 46), ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.33545 -0.08410  0.00351  0.08711  0.29302 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  6.331e-01  3.800e-02  16.661  < 2e-16 ***
+dflow        1.303e-04  6.160e-05   2.116   0.0352 *  
+dped         8.368e-05  3.757e-05   2.227   0.0267 *  
+shcirc       4.677e-01  8.401e-02   5.568 5.92e-08 ***
+shminsafe   -7.054e-02  6.118e-02  -1.153   0.2499    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1226 on 288 degrees of freedom
+Multiple R-squared:  0.1709,	Adjusted R-squared:  0.1594 
+F-statistic: 14.84 on 4 and 288 DF,  p-value: 4.87e-11
+
