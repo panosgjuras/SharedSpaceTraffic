@@ -4,7 +4,7 @@ Shared space is an umbrella term which refers to that part of urban road space w
 
 #### TWO DATASETS!!!!
 This repository contains tools to analyze coexistence in shared space. The analysis is based on two dataset which are publicly available:
-Tzouras, P., Kepaptsoglou, K., Vlahogianni, E. I.(2023), “Traffic measurements in Amalias Street. Conventional Road vs Shared Space”, Mendeley Data, V2, doi.org/10.17632/n3wzjd54pj.2
+Tzouras, P., Kepaptsoglou, K., Vlahogianni, E. I.(2023), “Traffic measurements in Amalias Street. Conventional Road vs Shared Space”, Mendeley Data, V2, https://doi.org/10.17632/n3wzjd54pj.2
 
 
 #### HYPOTHESIS
