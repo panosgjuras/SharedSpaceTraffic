@@ -1,40 +1,27 @@
 # "Shared space Traffic" - Coexistence problem
 
-Shared space is an umbrella term which refers to that part of urban road space which all road users (including pedestrians, cyclists, vehicles and disabled people) are encouraged to legally occupy, with little physical or visual separation. It intends to create safer road environments, by adding more danger. This concept is based on the risk homeostasis theory, where humans shift the balance of risk according to the surrounding environment, so that they can coexist. Since shared space is a controversial concept that increase the number and the complexity of interactions among road users, there are intriguing research questions/hypothesis that have not been answered/tested so far. 
+Shared space is an umbrella term which refers to that part of urban road space which all road users (including pedestrians, cyclists, vehicles and disabled people) are encouraged to legally occupy, with little physical or visual separation. It intends to create safer road environments, by adding more danger. This concept is based on the risk homeostasis theory, where humans shift the balance of risk according to the surrounding environment, so that they can coexist. Since shared space is a controversial concept that increase the number and the complexity of interactions among road users, **there are intriguing research questions/hypothesis that have not been answered/tested so far**. 
 
-#### TWO DATASETS!!!!
-This repository contains tools to analyze coexistence in shared space. The analysis is based on two dataset which are publicly available:
-Tzouras, P., Kepaptsoglou, K., Vlahogianni, E. I.(2023), “Traffic measurements in Amalias Street. Conventional Road vs Shared Space”, Mendeley Data, V2, https://doi.org/10.17632/n3wzjd54pj.2
+This repository contains tools to analyze traffic operations and therefore COEXISTENCE in shared space road environments. The analysis is based on **two datasets** which are publicly available with doi:
+1) Batista, M., Trifunović, A., Friedrich, B., (2022). Road users’ trajectories in different shared space schemes. https://doi.org/10.24355/dbbs.084-202210281217-0
+2) Tzouras, P., Kepaptsoglou, K., Vlahogianni, E. I.(2023). Traffic measurements in Amalias Street. Conventional Road vs Shared Space. Mendeley Data, V2. https://doi.org/10.17632/n3wzjd54pj.2
 
+The data analysis tools that are included in this repository test the following **six hypotheses**:
+- **H1**: Shared space leads to higher pedestrian crossing rates at any point, i.e., crossings per pedestrian in the road environment.
+- **H2**: Vehicles and pedestrians follow similar paths in shared space.
+- **H3**: Compared to a conventional road environment, pedestrian crossings in shared space strongly reduce vehicle speeds.
+- **H4**: When the vehicle flow tends to capacity in shared space, there is no difference with a conventional road environment.
+- **H5**: As shared space is more an umbrella term, the COEXISTENCE of road users is still influenced by the (informal) design of the road.
+- **H6**: COEXISTENCE IS FEASIBLE SCNARIO! Shared space can create road environments that are less car-dominated and more human-oriented.
 
-#### HYPOTHESIS
-Some of the Research Questions we aim to answer: 
-1. Does shared space lead to higher number of crossings?
-2. What is the relationship between pedestrian crossing and traffic speeds?
-3. What are the differences with a convention road when motorized traffic dominates?
+In this analysis, the following study **four cases** are considered:
+- [Frankfurter Street](https://www.openstreetmap.org/#map=18/52.10746/8.16162) is located in Bad Rothenfelde, Germany, and was designed as an “encounter zone”. The design includes a continuous surface with different paving designating pedestrian zones along both sides of the street. The road is two-way with a circulation zone of 6.0 m. In the target area, the width of the activity zone does not exceed the 3.5 m; in the mid-block section, this space is also used as a safe zone for pedestrians’ movements.
+- [Lange Street](https://www.openstreetmap.org/#map=18/52.16817/9.24980) is located in Hessisch Oldendorf, Germany, and was designed as a “traffic calming zone". The design includes a continuous surface with different paving designating pedestrian zones along both sides of the street. This case refers to a one-way street with a circulation zone of only 3.0 m. Focusing on the target zone where measurements are collected, the pedestrian space (i.e., activity and circulation zone) in each side is 3.0 meters.
+- [Marktplatz](https://www.openstreetmap.org/#map=18/52.25022/10.81891) is located in Königslutter am Elm, Germany, and was designed as a “20 km/h zone. Different paving visually segregates the walking and driving zones and a slight level of segregation is presented in the pedestrian zone. The target area of Marktplatz includes a square of 14 m. wide; this is considered as an activity zone. On the other side, the safe zone that is utilized by pedestrians is approximately 3.5 m. The road is two-way with a circulation zone of 6 m.
+- [Amalias Street](https://www.openstreetmap.org/#map=19/37.56608/22.79967) is located in Nafplio, Greece, and serves as an access street for vehicles to the pedestrianized (historical) city center. It contains two main sections, one with a conventional road design and the other with a shared space design. In the shared space section, the width of the circulation decreases from 7 m to 4.25 m, while the sum of activity and safe zone increases from 3.5 m to 6.25 m.
 
-##### CASES WITH AVTIVITY ZONE ETC..
+<img width="450" alt="image" src="https://user-images.githubusercontent.com/63541107/227502726-1de18f10-35a4-49e1-81ed-29969812e162.png">
 
 #### CONTENTS
 
 #### PAPERS
-
-a) Amalias Street, Nafplio, Greece ("amalias")
-https://goo.gl/maps/C4u45ZQ7NSuawD6w8
-
-<img src="https://user-images.githubusercontent.com/63541107/159054879-5d60afaa-4794-42fe-9d0d-b12f2aedb079.jpg" height="400">
-
-b) Frankfurter Straße, Bad Rothenfelde, Germany ("fsbr")
-https://goo.gl/maps/4DZyN25S4oZ9WQGA8
-
-<img src="https://user-images.githubusercontent.com/63541107/159056318-ef4b9e90-2c92-4d22-a3a1-7f535b52065b.png" height="250">
-
-c) Lange Straße, Hessisch Oldendorf, Germany ("lsho")
-https://goo.gl/maps/UHBhKsKojf7e9bUJ9
-
-<img src="https://user-images.githubusercontent.com/63541107/159057427-511d9df8-7bc9-4d63-bf37-91fafa502e82.png" height="250">
-
-d) Marktplatz, Königslutter am Elm, Germany ("mke")
-https://goo.gl/maps/BuAUxr1RNXyX6F7XA
-
-<img src="https://user-images.githubusercontent.com/63541107/159057794-7e366790-6875-4743-ada0-d154248f2ad7.png" height="250">
