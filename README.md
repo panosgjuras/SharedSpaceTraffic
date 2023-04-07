@@ -4,7 +4,7 @@ Shared space is an umbrella term which refers to that part of urban road space w
 
 This repository contains tools to analyze traffic operations and therefore COEXISTENCE in shared space road environments. The analysis is based on **two datasets** which are publicly available with doi:
 1) Batista, M., Trifunović, A., Friedrich, B., (2022). Road users’ trajectories in different shared space schemes. https://doi.org/10.24355/dbbs.084-202210281217-0
-2) Tzouras, P., Kepaptsoglou, K., Vlahogianni, E. I.(2023). Traffic measurements in Amalias Street. Conventional Road vs Shared Space. Mendeley Data, V2. https://doi.org/10.17632/n3wzjd54pj.2
+2) Tzouras, P., Kepaptsoglou, K., Vlahogianni, E. I. (2023). Traffic measurements in Amalias Street. Conventional Road vs Shared Space. Mendeley Data, V2. https://doi.org/10.17632/n3wzjd54pj.2
 
 The data analysis tools that are included in this repository test the following **six hypotheses**:
 - **H1**: Shared space leads to higher pedestrian crossing rates at any point, i.e., crossings per pedestrian in the road environment.
