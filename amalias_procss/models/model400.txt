@@ -1,20 +1,21 @@
 
 Call:
-lm(formula = speed ~ cross + headway, data = shared_speed)
+lm(formula = speed ~ cross + headway, data = subset(veh_data[-c(17, 
+    19, 54), ], case == "shnaf" & pcu == 1 & 60 * headway > 5))
 
 Residuals:
      Min       1Q   Median       3Q      Max 
--19.8643  -4.0312  -0.3228   4.2772  22.4411 
+-19.2488  -3.9843  -0.4733   4.1178  16.6543 
 
 Coefficients:
             Estimate Std. Error t value Pr(>|t|)    
-(Intercept)  25.0866     1.1296  22.208  < 2e-16 ***
-cross        -0.6217     0.1816  -3.423 0.000715 ***
-headway       4.2893     1.8088   2.371 0.018416 *  
+(Intercept)  25.3224     1.0850  23.339  < 2e-16 ***
+cross        -0.6501     0.1743  -3.731 0.000232 ***
+headway       4.1595     1.7247   2.412 0.016544 *  
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Residual standard error: 6.832 on 274 degrees of freedom
-Multiple R-squared:  0.05988,	Adjusted R-squared:  0.05302 
-F-statistic: 8.727 on 2 and 274 DF,  p-value: 0.0002117
+Residual standard error: 6.513 on 271 degrees of freedom
+Multiple R-squared:  0.06839,	Adjusted R-squared:  0.06152 
+F-statistic: 9.947 on 2 and 271 DF,  p-value: 6.778e-05
 

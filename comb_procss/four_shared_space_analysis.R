@@ -8,12 +8,12 @@ library(psych)
 library(dplyr)
 library(rstudioapi)
 
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("C:/Users/panos/Desktop/github_tzouras/Shared_space_Traffic")
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("/Users/panosgtzouras/Desktop/github_tzouras/Shared_space_Traffic")
 # https://leopard.tu-braunschweig.de/receive/dbbs_mods_00071535
 gerdat<-read.csv2('lsaxony_procss/outdatasets/datasets_germany.csv', header=T, dec=".", sep=",")
 # https://data.mendeley.com/datasets/n3wzjd54pj
-eldat<-read.csv2('datasets/amalias_traffic_dataset.csv', header=T, dec=".", sep=",") # as it is downloaded from the data
+eldat<-read.csv2('amalias_procss/outdatasets/amalias_traffic_dataset.csv', header=T, dec=".", sep=",") # as it is downloaded from the data
  
 # NEW DATASET TO PLAY WITH
 datafr_fun <- function(df, x, dats, limit){
@@ -132,10 +132,10 @@ traf$shpedspace <- 1 - traf$shvehspace
 
 
 # A. descriptive statistics..!
-describe(subset(traf, case=='fsbr')$speed)
-describe(subset(traf, case=='lsho')$speed)
-describe(subset(traf, case=='mke')$speed)
-describe(subset(traf, case=='shnaf')$speed)
+describe(subset(traf, (case=='fsbr' & speed!=0))$speed)
+describe(subset(traf, (case=='lsho' & speed!=0))$speed)
+describe(subset(traf, (case=='mke' & speed!=0))$speed)
+describe(subset(traf, (case=='shnaf' & speed!=0))$speed)
 
 describe(subset(traf, case=='fsbr')$shpedspace)
 describe(subset(traf, case=='lsho')$shpedspace)

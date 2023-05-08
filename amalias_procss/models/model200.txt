@@ -1,20 +1,21 @@
 
 Call:
-lm(formula = cross2 ~ ped + headway + 0, data = subset(ped_data[-c(155, 
-    154, 191, 166, 33, 31, 1, 27, 69, 98, 51), ], case == "shnaf"))
+lm(formula = cross2 ~ ped + headway + 0, data = subset(ped_data[-c(103, 
+    102, 31, 1, 33, 105, 60, 15, 51, 59, 12, 23), ], case == 
+    "shnaf"))
 
 Residuals:
     Min      1Q  Median      3Q     Max 
--1.8082 -0.2222  0.1853  0.6787  1.5115 
+-1.3202 -0.3006  0.1160  0.5544  1.0650 
 
 Coefficients:
         Estimate Std. Error t value Pr(>|t|)    
-ped     0.081371   0.005897  13.799  < 2e-16 ***
-headway 1.258661   0.187349   6.718  1.3e-09 ***
+ped     0.090015   0.005151  17.476  < 2e-16 ***
+headway 1.198453   0.159614   7.508 3.94e-11 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-Residual standard error: 0.657 on 96 degrees of freedom
-Multiple R-squared:  0.8987,	Adjusted R-squared:  0.8966 
-F-statistic: 425.8 on 2 and 96 DF,  p-value: < 2.2e-16
+Residual standard error: 0.5653 on 91 degrees of freedom
+Multiple R-squared:  0.9241,	Adjusted R-squared:  0.9224 
+F-statistic: 553.8 on 2 and 91 DF,  p-value: < 2.2e-16
 

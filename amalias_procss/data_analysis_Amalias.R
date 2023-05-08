@@ -6,13 +6,17 @@ library(gvlma)
 library(psych)
 library(RColorBrewer)
 library(rstudioapi) 
+library(MASS)
+library(olsrr)
 
 # import pedestrian dataset
 # setwd("C:/Users/panos/Desktop/github_tzouras/Shared_space_Traffic/datasets")
 # https://data.mendeley.com/datasets/n3wzjd54pj
 
+setwd("/Users/panosgtzouras/Library/CloudStorage/GoogleDrive-panosgjuras@gmail.com/My Drive/PAPERS_TZOURAS/paper17_project_Nafplio/datasets")
+
 ped_data<-read.csv2("amalias_pedestrian_dataset.csv",header=T,dec=".",sep=",")
-ped_data$time<-as.POSIXct(ped_data$time,format="%H:%M")
+ped_data$time<-as.POSIXct(ped_data$time, format="%H:%M")
 
 # import vehicle data
 veh_data<-read.csv2("amalias_vehicle_dataset_space.csv",header=T,dec=".",sep=",")
@@ -61,22 +65,22 @@ wilcox.test(shared_speed$headway, no_shared_speed$headway, exact=FALSE, paired=F
 
 # BOX PLOTS
 # crossings vs pedestrian volume in not shared
-p1<-ggplot(subset(ped_data[-c(155,154,191,166, 33, 31, 1, 27, 69, 98, 51), ], case=="shnaf"), aes(y=ped, x=as.factor(cross))) + ggtitle("Point A: Conventional Road Section") +
+p1<-ggplot(subset(ped_data[-c(155,154,191,166, 33, 31, 1, 27, 69, 98, 51), ], case=="shnaf"), aes(y=ped, x=as.factor(cross))) + ggtitle("Section A: Conventional Road") +
   geom_boxplot(fill = "darkseagreen2") +   geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) + theme_bw() +
   scale_x_discrete(name ="Pedestrian crossings in cross/2 minutes", limits=c("0","1","2","3","4","5","6","7","8","9","10")) +
   scale_y_continuous(name ="Pedestrian volume in peds/2 minutes", limits=c(0,50)) + geom_smooth(method=lm, color="red", aes(group=2))
-p2<-ggplot(subset(ped_data[-c(155,154,191,166), ], case=="covnaf"), aes(y=ped, x=as.factor(cross))) + ggtitle("Point B: Shared space section") +
+p2<-ggplot(subset(ped_data[-c(155,154,191,166), ], case=="covnaf"), aes(y=ped, x=as.factor(cross))) + ggtitle("Section B: Shared space") +
   geom_boxplot(fill = "lightblue1") +   geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) + theme_bw() +
   scale_x_discrete(name ="Pedestrian crossings in cross/2 minutes", limits=c("0","1","2","3","4","5","6","7","8","9","10")) +
   scale_y_continuous(name ="Pedestrian volume in peds/2 minutes", limits=c(0,50)) + geom_smooth(method=lm, color="red", aes(group=2))
 
 # traffic speed vs crossing in not shared
-p3<-ggplot(no_shared_speed, aes(y=speed, x=as.factor(cross))) + ggtitle("Point A: Conventional Road Section") +
+p3<-ggplot(no_shared_speed, aes(y=speed, x=as.factor(cross))) +
   geom_boxplot(fill = "darkseagreen2") +   geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) + theme_bw() +
   scale_x_discrete(name ="Pedestrian crossings in cross/2 minutes", limits=c("0","1","2","3","4","5","6","7","8","9","10")) +
   scale_y_continuous(name ="Traffic speed of cars in km/h", limits=c(0,50)) + geom_smooth(method=lm, color="red", aes(group=2))
 # in shared
-p4<-ggplot(shared_speed, aes(y=speed, x=as.factor(cross))) + ggtitle("Point B: Shared space section") +
+p4<-ggplot(shared_speed, aes(y=speed, x=as.factor(cross))) +
   geom_boxplot(fill = "lightblue1") +   geom_point(size = 1.5, alpha = .3, position = position_jitter(seed = 1, width = .2)) + theme_bw() +
   scale_x_discrete(name ="Pedestrian crossings in cross/2 minutes", limits=c("0","1","2","3","4","5","6","7","8","9","10")) +
   scale_y_continuous(name ="Traffic speed of cars in km/h", limits=c(0,50)) + geom_smooth(method=lm, color="red", aes(group=2))
@@ -87,34 +91,56 @@ ggsave('figureplots/trends_behavior_Amalias.png', plot = last_plot(), device = '
 
 # Models
 # pedestrian crossings models
+# bc <- boxcox(lm(subset(ped_data, cross>0)$cross ~ 1))
+bc <- boxcox(lm(ped_data$cross + 1 ~ 1))
+bc
+(lambda <- bc$x[which.max(bc$y)])
+
 ped_data$cross2<-sqrt(ped_data$cross) # normalize pedestrian crossing to meet linear regression assumptions
 hist(sqrt(ped_data$cross),xlab="pedestrian crossings", col="lightgrey", breaks = 10, probability = TRUE)
+
+ped_data$cross3 <- log(ped_data$cross + 1)
 # not shared
-model100<-lm(cross2~ped+headway+0, data=subset(ped_data[-c(155,154,191,166, 33, 31, 1, 27, 69, 98, 51), ], case=="covnaf"))
+model100<-lm(cross3~ ped + headway + 0, data=subset(ped_data[-c(155), ], case=="covnaf" & cross > 0))
 summary(model100)
 gvlma(model100) # check regression assumptions, here problem.
 par(mfrow=c(2,2)) # Q-Q plots
 plot(model100, pch=20)
+car::vif(lm(cross3~ped+headway, data=subset(ped_data[-c(155), ], case=="covnaf" & cross > 0)))
 # shared
-model200<-lm(cross2~ped+headway+0, data=subset(ped_data[-c(155,154,191,166, 33, 31, 1, 27, 69, 98, 51), ], case=="shnaf")) # shared
+model200<-lm(cross2~ped+headway + 0, data=subset(ped_data[-c(103, 102, 31, 1, 33, 105, 60, 15, 51, 59, 12, 23), ], case=="shnaf")) # shared
+# 155, 103, 102, 31, 1, 33, 105, 60, 15, 51, 59, 12, 23
 summary(model200)
 gvlma(model200)
 par(mfrow=c(2,2))
 plot(model200, pch=20)
+p<-model200
+car::vif(lm(cross2~ped+headway, data=subset(ped_data[-c(103, 102, 31, 1, 33, 105, 60, 15, 51, 59, 12, 23), ], case=="shnaf")))
+max(subset(ped_data[-c(103, 102, 31, 1, 33, 105, 60, 15, 51, 59, 12, 23), ], case=="shnaf")$ped)
 
 # Traffic speed models
 # not shared
+
+bc <- boxcox(lm(veh_data$speed ~ 1))
+bc
+(lambda <- bc$x[which.max(bc$y)])
+
 model300<-lm(speed~ cross + headway, data=no_shared_speed)
 summary(model300) # intercept - only model
 gvlma(model300)
 par(mfrow=c(2,2))
-plot(model400, pch=20)
+plot(model300, pch=20)
+car::vif(model300)
 # shared
-model400<-lm(speed~ cross + headway, data=shared_speed) # 0UTLIERS ARE MISSING
+
+shared_speed<-subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)
+
+model400<-lm(speed~ cross + headway, data=subset(veh_data[-c(17,19,54), ], case=="shnaf" & pcu==1 & 60*headway>5)) # 0UTLIERS ARE MISSING
 summary(model400)
 gvlma(model400) # PROBLEM WITH THE ASSUMPTIONS..
 par(mfrow=c(2,2))
 plot(model400, pch=20)
+car::vif(model400)
 
 setwd(dirname(getActiveDocumentContext()$path)) 
 sink("models/model100.txt")
@@ -130,65 +156,119 @@ sink("models/model400.txt")
 print(summary(model400))
 sink()
 
-# simulation of models
-h1<-60/60 
-fun.11<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h1)^2)-
-  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h1)^2)
-h2<-60/120
-fun.12<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h2)^2)-
-  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h2)^2)
-h3<-60/180
-fun.13<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h3)^2)-
-  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h3)^2)
-h4<-60/360
-fun.14<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h4)^2)-
-  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h4)^2)
-h5<-60/480
-fun.15<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h5)^2)-
-  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h5)^2)
-h6<-60/600
-fun.16<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h6)^2)-
-  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h6)^2)
 
-ped<-1:3500
+# simulation of models
+mo100 <- function(ped, h){
+  cr = model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h
+  return(cr)}
+
+mo200 <- function(ped, h){
+  cr = model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h
+  return(cr)}
+
+mo300 <- function() (mean(subset(veh_data, case=="covnaf" & pcu==1 & 60*headway>5)$speed))
+
+mo400 <- function(cr, h){
+  v = model400[["coefficients"]][["(Intercept)"]] +
+    model400[["coefficients"]][["cross"]] * cr + model400[["coefficients"]][["headway"]]*h
+  return(v)}
+
+dpedcross <-function(ped, h) {
+  cr1 = exp(mo100(ped, h)) - 1
+  cr2 = exp(mo200(ped, h)) - 1
+  y = cr2 - cr1
+  return(y)}
+
+dspeed <- function(ped, h){
+  cr2 = exp(mo200(ped, h)) - 1
+  v1 = mo300()
+  v2 = mo400(cr2, h)
+  y = v2 - v1
+  return(y)}
+
+percPedcross <- function(ped, h){
+  cr1 = exp(mo100(ped, h)) - 1
+  p = dpedcross(ped, h)/cr1
+  return(p)}
+
+percSpeed <- function(ped, h) (dspeed(ped, h)/mo300())
+
+h <- c(60/90, 60/120, 60/180, 60/300, 60/480, 60/780)
+pedD <- c(5, 10, 15, 20, 30, 40)
+fun.11 <- function(ped) (dpedcross(ped, h = h[1]))
+fun.12 <- function(ped) (dpedcross(ped, h = h[2]))
+fun.13 <- function(ped) (dpedcross(ped, h = h[3]))
+fun.14 <- function(ped) (dpedcross(ped, h = h[4]))
+fun.15 <- function(ped) (dpedcross(ped, h = h[5]))
+fun.16 <- function(ped) (dpedcross(ped, h = h[6]))
+
+fun.21 <- function(ped) (dspeed(ped, h = h[1]))
+fun.22 <- function(ped) (dspeed(ped, h = h[2]))
+fun.23 <- function(ped) (dspeed(ped, h = h[3]))
+fun.24 <- function(ped) (dspeed(ped, h = h[4]))
+fun.25 <- function(ped) (dspeed(ped, h = h[5]))
+fun.26 <- function(ped) (dspeed(ped, h = h[6]))
+
+# fun.11<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h1)^2)-
+#   ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h1)^2)
+# h2<-60/120
+# fun.12<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h2)^2)-
+#  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h2)^2)
+# h3<-60/180
+# fun.13<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h3)^2)-
+#  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h3)^2)
+# h4<-60/360
+# fun.14<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h4)^2)-
+#  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h4)^2)
+# h5<-60/480
+# fun.15<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h5)^2)-
+#  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h5)^2)
+# h6<-60/600
+# fun.16<-function(ped)  ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h6)^2)-
+#  ((model100[["coefficients"]][["ped"]]*ped + model100[["coefficients"]][["headway"]]*h6)^2)
+
+# df <- data.frame(ped = 1:3500, h = 60/60)
+# df <- rbind(df, data.frame(ped = 1:3500, h = 60/120))
+# df <- rbind(df, data.frame(ped = 1:3500, h = 60/180))
+# df <- rbind(df, data.frame(ped = 1:3500, h = 60/360))
+# df <- rbind(df, data.frame(ped = 1:3500, h = 60/480))
+# df <- rbind(df, data.frame(ped = 1:3500, h = 60/600))
+
+# ggplot(df, aes(x = ped, linetype = as.factor(h) )) + stat_function(fun = pedcross)
+
+ped<-1:50
 df<-data.frame(ped)
 cols<-brewer.pal(8, "GnBu")
-
-p5<-ggplot(df,aes(ped))+theme_bw() +
+p5<-ggplot(df,aes(x = ped))+theme_bw() +
   stat_function(fun = fun.11, mapping = aes(color = "fun.11"), size=1.05) +
   stat_function(fun = fun.12, mapping = aes(color = "fun.12"), size=1.05) +
   stat_function(fun = fun.13, mapping = aes(color = "fun.13"), size=1.05) +
   stat_function(fun = fun.14, mapping = aes(color = "fun.14"), size=1.05) +
   stat_function(fun = fun.15, mapping = aes(color = "fun.15"), size=1.05) +
   stat_function(fun = fun.16, mapping = aes(color = "fun.16"), size=1.05) +
-  scale_y_continuous("Difference in pedestrian cross/2 minutes", limits = c(-6, 4)) +
-  scale_x_continuous("Pedestrian volume in peds/2 minutes", limits = c(0, 50)) + # ?? ??????? ????? 50 ??????
-  scale_color_manual(name="with vehicle headway:",values=c(cols[8],cols[7],cols[6],cols[5],cols[4],cols[3]), 
-                     labels = c("60/60 minutes", 
-                                "60/120 minutes", 
-                                "60/180 minutes",
-                                "60/360 minutes",
-                                "60/480 minutes",
-                                "60/600 minutes"))
+  scale_y_continuous("Difference in pedestrian cross/2 min", limits = c(0, 100)) +
+  scale_x_continuous("Pedestrian volume in peds/2 min", limits = c(0, 44)) +
+  scale_color_manual(name="Headway (min):",values=c(cols[8],cols[7],cols[6],cols[5],cols[4],cols[3]), 
+                     labels = c("60/90","60/120","60/180", "60/300","60/480", "60/780"))
 
-fun.21<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
-                        model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h1)^2)+
-                        model400[["coefficients"]][["headway"]]*h1)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
-fun.22<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
-                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h2)^2)+
-                         model400[["coefficients"]][["headway"]]*h2)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
-fun.23<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
-                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h3)^2)+
-                         model400[["coefficients"]][["headway"]]*h3)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
-fun.24<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
-                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h4)^2)+
-                         model400[["coefficients"]][["headway"]]*h4)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
-fun.25<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
-                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h5)^2)+
-                         model400[["coefficients"]][["headway"]]*h5)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
-fun.26<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
-                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h6)^2)+
-                         model400[["coefficients"]][["headway"]]*h6)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
+# fun.21<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
+#                        model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h1)^2)+
+#                        model400[["coefficients"]][["headway"]]*h1)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
+# fun.22<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
+#                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h2)^2)+
+#                         model400[["coefficients"]][["headway"]]*h2)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
+# fun.23<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
+#                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h3)^2)+
+#                         model400[["coefficients"]][["headway"]]*h3)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
+# fun.24<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
+#                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h4)^2)+
+#                         model400[["coefficients"]][["headway"]]*h4)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
+# fun.25<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
+#                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h5)^2)+
+#                         model400[["coefficients"]][["headway"]]*h5)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
+# fun.26<-function(ped) (model400[["coefficients"]][["(Intercept)"]] + 
+#                         model400[["coefficients"]][["cross"]]* ((model200[["coefficients"]][["ped"]]*ped + model200[["coefficients"]][["headway"]]*h6)^2)+
+#                         model400[["coefficients"]][["headway"]]*h6)-mean(subset(veh_data, case=="shnaf" & pcu==1 & 60*headway>5)$speed)
 
 cols<-brewer.pal(8, "YlOrRd")
 p6<-ggplot(df,aes(ped))+theme_bw() +
@@ -198,16 +278,46 @@ p6<-ggplot(df,aes(ped))+theme_bw() +
   stat_function(fun = fun.24, mapping = aes(color = "fun.24"), size=1.05) +
   stat_function(fun = fun.25, mapping = aes(color = "fun.25"), size=1.05) +
   stat_function(fun = fun.26, mapping = aes(color = "fun.26"), size=1.05) +
-  scale_y_continuous("Difference in mean car speed in km/h", limits = c(-20, 2)) +
-  scale_x_continuous("Pedestrian volume in peds/2 minutes", limits = c(0, 50)) +
-  scale_color_manual(name="with vehicle headway:",values=c(cols[8],cols[7],cols[6],cols[5],cols[4],cols[3]), 
-                     labels = c("60/60 minutes", 
-                                "60/120 minutes", 
-                                "60/180 minutes",
-                                "60/360 minutes",
-                                "60/480 minutes",
-                                "60/600 minutes"))
+  scale_y_continuous("Difference in mean car speed in km/h", limits = c(-30, 0)) +
+  scale_x_continuous("Pedestrian volume in peds/2 min", limits = c(0, 44)) +
+  scale_color_manual(name="Headway (min):",values=c(cols[8],cols[7],cols[6],cols[5],cols[4],cols[3]), 
+                     labels = c("60/90","60/120","60/180", "60/300","60/480", "60/780"))
 
-ggarrange(p5, p6, ncol = 1, nrow = 2)
-setwd(dirname(getActiveDocumentContext()$path)) 
-ggsave('figureplots/model_simulation_res_Amalias.png', plot = last_plot(), device = 'png', height = 8.60, width = 5.47, units = 'in')
+# ggarrange(p5 + ggtitle('Pedestrian crossings'), p6 + ggtitle("Average car speed"), ncol = 1, nrow = 2)
+# setwd(dirname(getActiveDocumentContext()$path)) 
+# ggsave('figureplots/model_simulation_res_Amalias.png', plot = last_plot(), device = 'png', height = 8.60, width = 5.47, units = 'in')
+
+margi <- data.frame(ped = pedD[1], h = h) 
+margi <- rbind(margi, data.frame(ped = pedD[2], h = h) )
+margi <- rbind(margi, data.frame(ped = pedD[3], h = h) )
+margi <- rbind(margi, data.frame(ped = pedD[4], h = h) )
+margi <- rbind(margi, data.frame(ped = pedD[5], h = h) )
+margi <- rbind(margi, data.frame(ped = pedD[6], h = h) )
+
+margi$percPedcross <- percPedcross(margi$ped, margi$h)
+margi$percSpeed <- percSpeed(margi$ped, margi$h)
+
+p7 <- ggplot(margi, aes (x = as.factor(h), y = as.factor(ped), fill = percPedcross)) + 
+  geom_tile() + theme_bw() +
+  geom_text(aes(label = paste0(round(percPedcross*100, 1), "%")), size = 4) +
+  scale_fill_distiller(palette = "GnBu", name = "Perc. change (%)", labels = function(x) paste0(x*100, "%"),
+                       direction = 0) +
+  scale_y_discrete(name = "Pedestrian volume in peds/2 min") +
+  scale_x_discrete(name = "Mean time headway in min",  
+                   labels = c("60/780", "60/480", "60/300", "60/180", "60/120", "60/90"))
+
+p8 <- ggplot(margi, aes (x = as.factor(h), y = as.factor(ped), fill = percSpeed)) + 
+  geom_tile() + theme_bw() +
+  geom_text(aes(label = paste0(round(percSpeed*100, 1), "%")), size = 4) +
+  scale_fill_distiller(palette = "YlOrRd", name = "Perc. change (%)", labels = function(x) paste0(x*100, "%")) +
+  scale_y_discrete(name = "Pedestrian volume in peds/2 min") +
+  scale_x_discrete(name = "Mean time headway in min",  
+                   labels = c("60/780", "60/480", "60/300", "60/180", "60/120", "60/90"))
+
+a <- substitute(paste(bold('a')))
+b <- substitute(paste(bold('b')))
+c <- substitute(paste(bold('c')))
+d <- substitute(paste(bold('d')))
+
+ggarrange(p5 + ggtitle(a), p6 + ggtitle(b),
+          p7 + ggtitle(c), p8 + ggtitle(d), align = 'v', ncol = 2, nrow = 2)
